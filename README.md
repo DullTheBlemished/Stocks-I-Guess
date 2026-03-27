@@ -1,2 +1,3 @@
 # Stocks-I-Guess
-Main project rn (kind of)
+This is pllaned to be an ongoing project btw
+
