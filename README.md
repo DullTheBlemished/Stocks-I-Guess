@@ -10,4 +10,6 @@ so, notice that in my old version i had the market and the logic of the players 
 
 what i consider is the best improvement of this version from my abandoned one is the player input system; this one utalizes a system of commands such as b bread 3 becuase i learnt about .list() and stuff and figured out i can just make a system of commands instead of like THREEEEE diffrent input options like back then, you had to (input 1) B, (input 2) bread and you had to do the same to change the buy amount and sell amount and that also led to the glitch of inf money where you staretd buying negative items and yeaaa, i also made a dedicated inventory because im gonna add a lot more stuff and i also imporved how the black market riddle worked in case some iddiots decides to like read the poem once, ignore it, turn it off without remembering it and never unlocking the black market - 28/03/2026, version 1.2
 
+hello again, i need to learn a lesson in humility or smth because goddam i thought i could finish this without classes, well i did get up to version 1.3, where the black amrket should work but the relics dont, and as again, i will come back and make a final, turly final version once i've mastered classes - 31/03/2026
+
 
