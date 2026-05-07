@@ -17,15 +17,19 @@ class user:
         self.inventory = {"bread": 0, "potion": 0, "sword": 0,
                           "aetherium": 0, "dragonegg": 0,
                           }
+        self.scrolls = {"darkscroll": False,
+                        }
         self.daycount = 0
         self.daycounttax = 4
         self.level = 0
         self.exp = 0
         self.exp_multi = 1
         self.exp_cap = int((1.15)**(self.level + 5) + (10 + self.level))
-
+        self.user_input = 0
+        self.markets = {"market": True, "black_market": False,}
+        
         if tester != False:
-            self.money = 1000
+            self.money = 10000
             self.inventory = {"bread": 10, "potion": 10, "sword": 10,
                             "aetherium": 10, "dragonegg": 10,
                             }
@@ -72,15 +76,25 @@ class user:
         print(f"{B}----+----INVENTORY----+----{END}")
         print("")
         print(f"{B}     --Common Items--{END}")
-        print(f"Bread: {self.inventory["bread"]} (common)")
-        print(f"Potion: {self.inventory["potion"]} (uncommon)")
-        print(f"Sword: {self.inventory["sword"]} (rare)")
+        for obj in self.inventory:
+            print(f"{obj.title()}: {player.inventory[obj]} ({name_to_object[obj].classification})") 
         print("")
-        print(f"{B}     --Rarer Items--{END}")
-        print(f"Aetherium: {self.inventory['aetherium']} (epic)")
-        print(f"Dragon Egg: {self.inventory['dragonegg']} (legendary)")
+
+        print(f"{B}     -----Scrolls-----{END}")
+        for scroll in self.scrolls:
+            if self.scrolls[scroll] == True:
+                print(f"📜 {scroll.capitalize()}")
         print("")
-        input("'ENTER' to continue")
+
+        self.user_input = input("'ENTER' to return, or input a name of an item/scroll to use it (description for items only):")
+        try:
+            input(f"{name_to_object[self.user_input.lower()].print_description()}")
+
+        except AttributeError:
+            name_to_object[self.user_input.lower()].open_scroll()
+
+        except:
+            pass
 
     def tutorial_print(self):
         os.system("cls")
@@ -99,8 +113,47 @@ class user:
         print("(also i made it so the order of (ACTION) (ITEM) (AMOUNT) can be inter-changeable)")
         input("'ENTER' to continue, tutorial may be acessed again via inputting * in the main inpu Good luck!")
     
+class scroll():
+    def __init__(self, lines, answer = False, answered = False):
+        self.lines = lines
+        self.answer = answer
+        self.answered = answered
+        self.user_input = 0
+
+    def open_scroll(self):
+        os.system("cls")
+        WIDTH = 60
+        print(r"      _______________________________________________________________")
+        print(r"     ()______________________________________________________________) ")
+        print(r"      |                                                              |")
+
+        for line in self.lines:
+            visible_len = len(line.replace(B, "").replace(END, ""))
+            total_padding = WIDTH - visible_len
+            left_pad = total_padding // 2
+            right_pad = total_padding - left_pad
+            print(f"      | {' ' * left_pad}{line}{' ' * (right_pad)} |")
+
+
+        print(r"      |                                                              |")
+        print(r"      |______________________________________________________________|")
+        print(r"     ()______________________________________________________________) ")
+        print("")
+
+        if self.answered == False:
+            print("Leave empty and 'ENTER' to return, else, answer it...")
+        else:
+            print("leave blank and 'ENTER' to return.")
+
+        self.user_input = input(">>>:").lower().replace(" ", "")
+
+        if self.user_input == "":
+            pass
+        elif self.user_input == self.answer:
+            self.answered = True
+
 class store():
-    def __init__(self):
+    def __init__(self, contestant):
         self.state = "market"
 
     def market(self):
@@ -138,7 +191,7 @@ class store():
     |                                         |
     |    [ITEM]        [PRICE]      [STOCK]   |
     |   1. Aetherium    ${aetherium.price}          {aetherium.stock}      |
-    |   2. Dragon Egg   ${dragonegg.price}          {dragonegg.stock}      |
+    |   2. DragonEgg   ${dragonegg.price}          {dragonegg.stock}      |
     |   3. Coming soon  ${coming_soon}          {coming_soon}     |
     |_________________________________________|
     |___|___|___|___|___|___|___|___|___|___|_|
@@ -148,7 +201,7 @@ class store():
     """)
         
 class item:
-    def __init__(self, name, classification, price_range, stock_range, market):
+    def __init__(self, name, classification, price_range, stock_range, market, description):
         self.name = name
         self.stock = 0
         self.price = 0
@@ -156,6 +209,7 @@ class item:
         self.price_range = price_range
         self.stock_range = stock_range
         self.market = market
+        self.description = description
 
         self.market_reset()
 
@@ -175,27 +229,49 @@ class item:
     def sell(self, action_multiplier, contestant):
         contestant.inventory[self.name] -= action_multiplier
         contestant.money += self.price * action_multiplier
-        contestant.exp += contestant.level
+        contestant.exp += contestant.level * action_multiplier
+    
+    def print_description(self):
+        return(f"{self.description}")
 
 def pass_day():
     for obj in name_to_object:
-        name_to_object[obj].market_reset()
+        try:
+            name_to_object[obj].market_reset()
+        except:
+            pass
 
     player.day_pass()
 
 def secondary_input_logic(user_input, contestant):
+    if player.markets["black_market"] == True and market.state != "black_market" and "blmk" in user_input:
+        market.state = "black_market"
+        print("Traveling...")
+        time.sleep(1)
+        return
+
+    if market.state != "market" and user_input == "mk":
+        market.state = "market"
+        print("Traveling...")
+        time.sleep(1)
+        return
+
     if "e" in user_input:
         contestant.inventory_print()
 
     elif "w" in user_input:
         pass_day()
+        print("day passed")
+        time.sleep(0.5)
+
     elif "*" in user_input:
         contestant.tutorial_print()
 
     else:
-        raise InvalidInput
+        print("Invalid Input!")
+        input("'ENTER' to continue")
 def main_input_logic(user_input, shop, contestant):
-    user_input = user_input.split()
+    user_input = user_input.lower().split()
     action = 0
     action_multiplier = 0
     item = 0
@@ -264,21 +340,44 @@ def main_input_logic(user_input, shop, contestant):
 # FLAG
 # Tester/Player mode (Enter true, for Tester, leave empty/False for player)
 player = user()
-market = store()
+market = store(player)
 # its name, classification, price_range, stock_range, market. IN THAT ORDER, also both of the range MUST be list or tuple
-bread = item("bread", "common", (10, 25), (2, 6), "market")
-potion = item("potion", "uncommon", (110, 150), (1, 3), "market")
-sword = item("sword", "rare", (550, 830), (0, 2), "market")
-aetherium = item("aetherium", "epic", (950, 2000), (1, 3), "black_market")
-dragonegg = item("dragonegg", "legendary", (1750, 3500), (0, 1), "black_market")
+bread = item("bread", "common", (10, 25), (2, 6), "market", "a nice loaf of bread, a bit stale tho.")
+potion = item("potion", "uncommon", (110, 150), (1, 3), "market", "i wouldnt drink this if i were you.")
+sword = item("sword", "rare", (550, 830), (0, 2), "market", "a blade fit for a warrior! gleams in the sunlight.")
+aetherium = item("aetherium", "epic", (950, 2000), (1, 3), "black_market", "a blue, powerful crystal, shiny.")
+dragonegg = item("dragonegg", "legendary", (1750, 3500), (0, 1), "black_market", "please dont warm it up. PLEASE DONT.")
+
+# its the content, then the answer to it, and the answered (True or False), leave False if no answers
+# needed
+darkscroll = scroll([
+        f"Three steps {B}forward{END}, none to the rear,",
+        "I shift the truth to hide what's here.",
+        "A trio of turns makes A into D,",
+        "Slide the alphabet to talk to me.",
+        "Where the alleys dim and the laws blind,",
+        "The shadowed stalls won't speak a word,",
+        "Unless this secret shift is heard:",
+        "",
+        f"{B}EODFNPDUNHW{END}"
+    ], "blackmarket", False)
 
 name_to_object = {"bread": bread, "potion": potion, "sword": sword,
                   "aetherium": aetherium, "dragonegg": dragonegg,
+                  "darkscroll": darkscroll,
                   }
 rarity = {"common": 2, "uncommon": 4, "rare": 7, "epic": 10, "legendary": 25,
           }
 
+def routine_check():
+    if player.level >= 20:
+        player.scrolls["darkscroll"] = True
+
+    if darkscroll.answered == True:
+        player.markets["black_market"] =  True
+
 def game():
+        routine_check()
         user_input = 0
         os.system("cls")
         print(f"{player.daycounttax} days until tax (18%)")
@@ -286,16 +385,37 @@ def game():
         print(f"${int(player.money)}")
         print(f"level {player.level} ({player.exp}/{player.exp_cap})xp")
         print(market.market())
+
+        print("'e' for inventory, '*' for tutorial screen")
+        if player.markets["black_market"] == True and market.state != "black_market":
+            print("input blmk to go to the black market")
+
+        elif market.state == "black_market":
+            print("input mk to go back")
+
         user_input = input(">>>:").lower()
         for char in['!', '"', '#', '$', '%', '&', "'", '(', ')', '+', ',', '-', 
                     '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', 
                     '^', '_', '`', '{', '|', '}', '~']:
             user_input = user_input.replace(char, "")
-        if len(user_input.split()) == 1:
-        # its input, then player
-            secondary_input_logic(user_input, player)
-        # its input, then market, then player
-        else:
-            main_input_logic(user_input, market, player)
+
+        try:
+            if len(user_input.split()) == 1:
+            # its input, then player
+                secondary_input_logic(user_input, player)
+            # its input, then market, then player
+            else:
+                main_input_logic(user_input, market, player)
+        
+        except InvalidInput:
+            print("Invalid Input")
+            input("'ENTER' to continue")
+
+        except InsufficientFunds:
+            print("Insufficient funds/item/stock!")
+            input("'ENTER' to continue")
+
+player.tutorial_print()
 while True:
     game()
+    
